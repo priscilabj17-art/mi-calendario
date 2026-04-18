@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mi Calendario</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f9f9fb;
+}
+
+.container {
+  display: flex;
+  overflow-x: scroll;
+  height: 120px;
+  align-items: center;
+  padding: 10px;
+}
+
+.day {
+  min-width: 70px;
+  margin: 5px;
+  padding: 10px;
+  border-radius: 10px;
+  background: #e0f7fa;
+  text-align: center;
+  cursor: pointer;
+}
+
+.today {
+  background: #b2ebf2;
+  transform: scale(1.1);
+}
+
+.detail {
+  display: none;
+  padding: 20px;
+}
+
+.task {
+  margin: 10px 0;
+}
+</style>
+</head>
+
+<body>
+
+<div id="mainView" class="container"></div>
+
+<div id="detailView" class="detail">
+  <h2 id="dayTitle"></h2>
+  <div id="tasks"></div>
+  <button onclick="addTask()">Agregar tarea</button>
+  <br><br>
+  <button onclick="goBack()">Volver</button>
+</div>
+
+<script>
+const daysContainer = document.getElementById("mainView");
+const detailView = document.getElementById("detailView");
+const tasksDiv = document.getElementById("tasks");
+const dayTitle = document.getElementById("dayTitle");
+
+let selectedDate = null;
+
+function generateDays() {
+  const today = new Date();
+
+  for (let i = -30; i < 60; i++) {
+    let date = new Date();
+    date.setDate(today.getDate() + i);
+
+    let div = document.createElement("div");
+    div.className = "day";
+
+    if (i === 0) div.classList.add("today");
+
+    div.innerHTML = `
+      <strong>${date.toLocaleDateString('es-ES', { weekday: 'long' })}</strong><br>
+      ${date.getDate()}
+    `;
+
+    div.onclick = () => openDay(date);
+
+    daysContainer.appendChild(div);
+  }
+}
+
+function openDay(date) {
+  selectedDate = date.toDateString();
+  dayTitle.innerText = date.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric' });
+
+  document.getElementById("mainView").style.display = "none";
+  detailView.style.display = "block";
+
+  loadTasks();
+}
+
+function goBack() {
+  detailView.style.display = "none";
+  document.getElementById("mainView").style.display = "flex";
+}
+
+function loadTasks() {
+  tasksDiv.innerHTML = "";
+  let data = JSON.parse(localStorage.getItem(selectedDate)) || [];
+
+  data.forEach((task, index) => {
+    let div = document.createElement("div");
+    div.className = "task";
+
+    div.innerHTML = `
+      <input type="checkbox" ${task.done ? "checked" : ""} onclick="toggleTask(${index})">
+      ${task.time} - ${task.text}
+    `;
+
+    tasksDiv.appendChild(div);
+  });
+}
+
+function addTask() {
+  let time = prompt("Hora:");
+  let text = prompt("Tarea:");
+
+  let data = JSON.parse(localStorage.getItem(selectedDate)) || [];
+
+  data.push({ time, text, done: false });
+
+  localStorage.setItem(selectedDate, JSON.stringify(data));
+
+  loadTasks();
+}
+
+function toggleTask(index) {
+  let data = JSON.parse(localStorage.getItem(selectedDate)) || [];
+  data[index].done = !data[index].done;
+  localStorage.setItem(selectedDate, JSON.stringify(data));
+}
+generateDays();
+</script>
+
+</body>
+</html>
